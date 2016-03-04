@@ -1,0 +1,9 @@
+msg1("msg1",["NA","NB","A"]) = XML([
+		("NA","nounce","string"),
+		("NB","nounce","base64"),
+		("A","agent","string")])
+
+msg1("msg1",["NA","NB","A"]) = XML([
+		("NB","nounce","string"),
+		("NA","nounce","base64"),
+		("A","agent","string")])
