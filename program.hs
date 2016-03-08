@@ -20,7 +20,6 @@ main = do
   inp <- readFile "Concrete Examples/Msg.asn2"
   let tokens = alexScanTokens inp
   let formats = parser tokens
-  print formats
 
   if not $ disjoint formats then
     print "Formats are not disjoint. Leaving"
@@ -35,28 +34,26 @@ writeClasses ((Format name _ (Concrete format fields)):xs)
   | format == "ASN1" = do writeASN1 name fields
                           writeClasses xs
 
-  {-
-  do
-  imports <- readFile "imports.txt"
-  {-
-    TODO: Run trough all formats, and create a seperate
-          class for each of them
-  -}
-  let format = head formats
-  let fileLines = imports 
-                ++ makeHeader format            
-  putStr fileLines
-  -}
-
 writeXML :: String -> [Field] -> IO ()
 writeXML name fields = 
-  writeFile ("out/" ++ name ++ ".java") (makeHeader name)
+  writeFile ("out/" ++ name ++ ".java") $ (makeHeader name) ++ makePrivateVars fields
 
 writeASN1 :: String -> [Field] -> IO ()
 writeASN1 name fields = print "Test"
+
+
+-- Current WIP
+makePrivateVars :: [Field] -> String
+makePrivateVars [] = "\n"
+makePrivateVars ((Field id tag (Encoding enc)):xs)
+  | enc == "String" = "String "
+  | enc == "Base64" = "test "
+  otherwise "Wrong encoding in: "
+
 
 makeHeader :: String -> String
 makeHeader name = 
                   "public class "
                   ++ name
                   ++ "{\n"
+                  ++ "int numNodes = "
