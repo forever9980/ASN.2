@@ -9,6 +9,7 @@ import java.io.StringReader;
 /**
  * ASN.2 - A model approach to secure protocol implementation v. 2016
  * (C) Buster Kim Mejborn - 2016
+ * All rights reserved
  */
 public class Msg_ASN1 {
     String NA,NB,A;

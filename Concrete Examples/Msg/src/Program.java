@@ -1,5 +1,7 @@
 /**
- * Created by buster on 3/7/16.
+ * ASN.2 - A model approach to secure protocol implementation v. 2016
+ * (C) Buster Kim Mejborn - 2016
+ * All rights reserved
  */
 public class Program {
     public static void main(String args[]) throws Exception {
