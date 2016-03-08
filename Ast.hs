@@ -19,13 +19,11 @@ data Encoding:
                 deriving Show
 
 Example:  [Format 
-            "msg1"
-              ["NA","NB","A"]
+            "formatname"
+              ["ID","ID","ID"]
               (Concrete 
                 XML 
-                [Field "NA" "nonce" (Encoding Base64)])
-
-newtype er kun et compiletime check
+                [Field "ID" "Type" (Encoding Base64)])
 
 -}
 
@@ -74,4 +72,4 @@ instance Eq Concrete where
 -- May need to be rewritten with inbuilt functions
 disjoint :: (Eq a) => [a] -> Bool
 disjoint [] = True
-disjoint (x:xs) = all (\t -> t) (map (\y -> x/=y) xs) && (disjoint xs)
+disjoint (x:xs) = and (map (\y -> x/=y) xs) && (disjoint xs)

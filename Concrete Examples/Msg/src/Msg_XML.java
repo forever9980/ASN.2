@@ -8,6 +8,7 @@ import java.io.StringReader;
 
 /**
  * ASN.2 - A model approach to secure protocol implementation v. 2016
+ * Example output using XML implementation
  * (C) Buster Kim Mejborn - 2016
  * All rights reserved
  */
@@ -71,6 +72,7 @@ public class Msg_XML {
      ******************************/
 
     private boolean isValidInput(String chars){
+        if (chars.isEmpty()) return false;
         for (int i = 0; i < chars.length()-1; i++){
             if (chars.charAt(i) == '<'){
                 return false;

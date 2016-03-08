@@ -1,0 +1,18 @@
+msg1("msg1",["NA","NB","A"]) = XML([
+		("NA","nounce","string"),
+		("NB","nounce","string"),
+		("A","agent","base64")])
+
+msg1("msg2",["NA","NB","A"]) = XML([
+		("NA","nounce","string"),
+		("NB","nounce","string"),
+		("A","agent","string")])
+msg1("msg3",["NA","NB","A"]) = ASN1([
+		("NA","nounce","string"),
+		("NB","nounce","string"),
+		("A","agent","base64")])
+
+msg1("msg4",["NA","NB","A"]) = XML([
+		("NA","nounce","string"),
+		("NB","nounce","string"),
+		("A","agent","string")])
