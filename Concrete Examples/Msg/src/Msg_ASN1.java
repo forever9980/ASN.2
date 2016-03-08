@@ -10,7 +10,7 @@ import java.io.StringReader;
  * ASN.2 - A model approach to secure protocol implementation v. 2016
  * (C) Buster Kim Mejborn - 2016
  */
-public class Msg_XML {
+public class Msg_ASN1 {
     String NA,NB,A;
     int numNodes = 3;
     /*******************************
@@ -18,26 +18,22 @@ public class Msg_XML {
      *         Constructors        *
      *                             *
      ******************************/
-    public Msg_XML(String NA, String NB, String A) throws InvalidInputException {
-        if (isValidInput(NA) && isValidInput(NB) && isValidInput(A) ){
-            this.NA = NA;
-            this.NB = NB;
-            this.A = A;
-        }else {
-            throw new InvalidInputException();
-        }
+    public Msg_ASN1(String NA, String NB, String A) throws InvalidInputException {
+        // TODO: Implement me
     }
 
-    public Msg_XML(String format) throws Exception {
+    public Msg_ASN1(String format) throws Exception {
+        // TODO: Check if document builder can be used for ASN1, else find another parser.
         Document document = loadXMLFromString(format);
-        Node node = document.getDocumentElement().getFirstChild();      // Get the first child node
+        Node node = document.getDocumentElement().getFirstChild();                                          // Get the first child node
+
         for (int i = 1; i<=numNodes; i++){
             switch(i){
                 case 1: this.NA = node.getTextContent(); break;
                 case 2: this.NB = node.getTextContent(); break;
                 case 3: this.A = node.getTextContent(); break;
             }
-            node = node.getNextSibling().getNextSibling();              // Step untill next node
+            node = node.getNextSibling().getNextSibling();                                                 // Step untill next node
         }
     }
 
@@ -54,12 +50,8 @@ public class Msg_XML {
     }
 
     public String encode (){
-        //Serialize / Pretty print the object
-        return "<Msg_XML>\n"
-                + "  " + "<NA>" + NA + "</NA>\n"
-                + "  " + "<NB>" + NB + "</NB>\n"
-                + "  " + "<A>"  + A  + "</A>\n"
-                + "</Msg_XML>";
+        // TODO: Serialize / Pretty print the object
+        return "";
     }
 
 
@@ -70,12 +62,8 @@ public class Msg_XML {
      ******************************/
 
     private boolean isValidInput(String chars){
-        for (int i = 0; i < chars.length()-1; i++){
-            if (chars.charAt(i) == '<'){
-                return false;
-            }
-        }
-        return true;
+        // TODO: Implement me
+        return false;
     }
 
     private static Document loadXMLFromString(String xml) throws Exception
