@@ -13,8 +13,10 @@ import java.io.StringReader;
  * All rights reserved
  */
 public class Msg_XML {
-    String NA,NB,A;
-    int numNodes = 3;
+    private byte[] NA;
+    private byte[] NB;
+    private String A;
+    private int numNodes = 3;
     /*******************************
      *                             *
      *         Constructors        *
