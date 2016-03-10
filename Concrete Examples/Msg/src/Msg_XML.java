@@ -4,25 +4,27 @@ import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
 import java.io.StringReader;
+import java.util.Base64;
 
 /**
  * ASN.2 - A model approach to secure protocol implementation v. 2016
- * Example output using XML implementation
+ * Example on how output should look using XML implementation
  * (C) Buster Kim Mejborn - 2016
  * All rights reserved
  */
 public class Msg_XML {
     private byte[] NA;
     private byte[] NB;
-    private String A;
+    private byte[] A;
     private int numNodes = 3;
     /*******************************
      *                             *
      *         Constructors        *
      *                             *
      ******************************/
-    public Msg_XML(String NA, String NB, String A) throws InvalidInputException {
+    public Msg_XML(byte[] NA, byte[] NB, byte[] A) throws InvalidInputException {
         if (isValidInput(NA) && isValidInput(NB) && isValidInput(A) ){
             this.NA = NA;
             this.NB = NB;
@@ -32,16 +34,19 @@ public class Msg_XML {
         }
     }
 
-    public Msg_XML(String format) throws Exception {
-        Document document = loadXMLFromString(format);
-        Node node = document.getDocumentElement().getFirstChild();      // Get the first child node
+    public Msg_XML(byte[] format) throws Exception {
+    Document document = loadXML(format);
+        Node node = document.getDocumentElement().getFirstChild();
+        // Check if there's a text element in the XML root and skip it.
+        if(node.getNodeType()==3) { node = node.getNextSibling(); }
+
         for (int i = 1; i<=numNodes; i++){
             switch(i){
-                case 1: this.NA = node.getTextContent(); break;
-                case 2: this.NB = node.getTextContent(); break;
-                case 3: this.A = node.getTextContent(); break;
+                case 1: this.NA = b64decode(node.getTextContent().getBytes()); break;
+                case 2: this.NB = b64decode(node.getTextContent().getBytes()); break;
+                case 3: this.A = b64decode(node.getTextContent().getBytes()); break;
             }
-            node = node.getNextSibling().getNextSibling();              // Step untill next node
+            node = node.getNextSibling().getNextSibling();              // Step until next node
         }
     }
 
@@ -50,22 +55,14 @@ public class Msg_XML {
      *       Public Methods        *
      *                             *
      ******************************/
-    public boolean verify (){
-        //Verify that this object does not contain illegal characters
-        //And all needed fields are filled
-        return (!(NA.isEmpty() && NB.isEmpty() && A.isEmpty())
-                && (isValidInput(NA) && isValidInput(NB) && isValidInput(A)));
-    }
-
-    public String encode (){
+    public byte[] encode (){
         //Serialize / Pretty print the object
-        return "<Msg_XML>\n"
-                + "  " + "<NA>" + NA + "</NA>\n"
-                + "  " + "<NB>" + NB + "</NB>\n"
-                + "  " + "<A>"  + A  + "</A>\n"
-                + "</Msg_XML>";
+        return ("<Msg_XML>\n"
+                + "  " + "<nonce>" + new String(b64encode(NA)) + "</nonce>\n"
+                + "  " + "<nonce>" + new String(b64encode(NB)) + "</nonce>\n"
+                + "  " + "<agent>"  + new String(b64encode(A))  + "</agent>\n"
+                + "</Msg_XML>").getBytes();
     }
-
 
     /*******************************
      *                             *
@@ -73,22 +70,26 @@ public class Msg_XML {
      *                             *
      ******************************/
 
-    private boolean isValidInput(String chars){
-        if (chars.isEmpty()) return false;
-        for (int i = 0; i < chars.length()-1; i++){
-            if (chars.charAt(i) == '<'){
-                return false;
-            }
+    private byte[] b64encode(byte[] b){
+        return Base64.getEncoder().encode(b);
+    }
+
+    private byte[] b64decode(byte[] b){
+        return Base64.getDecoder().decode(b);
+    }
+
+    private boolean isValidInput(byte[] chars){
+        for(byte b : chars){
+            if (b == 60) return false;
         }
         return true;
     }
 
-    private static Document loadXMLFromString(String xml) throws Exception
+    private static Document loadXML(byte[] xml) throws Exception
     {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
-        InputSource is = new InputSource(new StringReader(xml));
-        return builder.parse(is);
+        return builder.parse(new ByteArrayInputStream(xml));
     }
 
     /******************************
@@ -97,10 +98,10 @@ public class Msg_XML {
      *                             *
      ******************************/
 
-    public String getNA(){ return NA; }
-    public String getNB(){ return NB; }
-    public String getA() { return A;  }
-    public void setNA(String NA){ this.NA = isValidInput(NA)? NA : this.NA;  }
-    public void setNB(String NB){ this.NB = isValidInput(NB) ? NB : this.NB; }
-    public void setA(String A)  { this.A  = isValidInput(A)  ? A : this.A; }
+    public byte[] getNA(){ return NA; }
+    public byte[] getNB(){ return NB; }
+    public byte[] getA() { return A;  }
+    public void setNA(byte[] NA){ this.NA = isValidInput(NA)? NA : this.NA;  }
+    public void setNB(byte[] NB){ this.NB = isValidInput(NB) ? NB : this.NB; }
+    public void setA(byte[] A)  { this.A  = isValidInput(A)  ? A : this.A; }
 }

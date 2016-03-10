@@ -28,6 +28,7 @@ Example:  [Format
 -}
 
 module Ast where
+import Data.List
 
 data Format = Format Id [Id] Concrete
       deriving Show
@@ -69,7 +70,15 @@ instance Eq Concrete where
       sameArgTypes xs ys = 
         and (zipWith compareTypes xs ys)
 
--- May need to be rewritten with inbuilt functions
 disjoint :: (Eq a) => [a] -> Bool
 disjoint [] = True
 disjoint (x:xs) = and (map (\y -> x/=y) xs) && (disjoint xs)
+
+hasValidTags :: [Field] -> Bool
+hasValidTags [] = True
+hasValidTags [(Field _ tag _)] =
+ do
+  let validInputs = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ ['-','_','.']
+  let validStartChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['_']
+  (all (\e -> elem e validInputs) tag) && (elem (head tag) validStartChars)
+hasValidTags (x:xs) = hasValidTags [x] && hasValidTags xs
