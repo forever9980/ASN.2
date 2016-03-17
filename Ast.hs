@@ -35,11 +35,14 @@ data Format = Format Id [Id] Concrete
 
 type Id = String
 type Tag = String
+type Length = String
 
-data Concrete = Concrete String [Field]
+data Concrete = XML String [Field]
+              | ASN String [Field]
         deriving Show
 
-data Field = Field Id Tag Encoding
+data Field = Field_XML Id Tag Encoding
+           | Field_ASN Tag Length
        deriving Show
 
 newtype Encoding = Encoding String
@@ -61,12 +64,12 @@ instance Eq Format where
       formatA == formatB
 
 instance Eq Concrete where
-  (Concrete formatA argsA) == (Concrete formatB argsB)
+  (XML formatA argsA) == (XML formatB argsB)
     = formatA == formatB
     && length argsA == length argsB
     && sameArgTypes argsA argsB
     where
-      compareTypes (Field _ _ (Encoding typeA)) (Field _ _ (Encoding typeB)) = typeA == typeB 
+      compareTypes (Field_XML _ _ (Encoding typeA)) (Field_XML _ _ (Encoding typeB)) = typeA == typeB 
       sameArgTypes xs ys = 
         and (zipWith compareTypes xs ys)
 
@@ -76,7 +79,7 @@ disjoint (x:xs) = and (map (\y -> x/=y) xs) && (disjoint xs)
 
 hasValidTags :: [Field] -> Bool
 hasValidTags [] = True
-hasValidTags [(Field _ tag _)] =
+hasValidTags [(Field_XML _ tag _)] =
  do
   let validInputs = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ ['-','_','.']
   let validStartChars = ['a'..'z'] ++ ['A'..'Z'] ++ ['_']

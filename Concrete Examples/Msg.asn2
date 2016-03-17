@@ -9,13 +9,23 @@ msg1("msg2",["NA","NB","A","B"]) = XML([
 		("A","agent","String"),
 		("B","agent","String")])
 
+msg("msg1",["NA","NB","A"]) = ASN1([
+		("NA","1"),
+		("NB","1"),
+		("A","2")])
 
-msg1("msg3",["NA","NB","A"]) = ASN1([
-		("NA","nounce","Base64"),
-		("NB","nounce","Base64"),
-		("A","agent","String")])
+msg("Handshake",["tag","data"]) = ASN1([
+		("tag","1"),
+		("data","3")])
 
-msg1("msg4",["NA","NB","A"]) = XML([
-		("NA","nounce","Base64"),
-		("NB","nounce","Base64"),
-		("A","agent","String")])
+msg("serverhello",["tag","data","byte","byte","time","random","sessionid","ciphersuites","compmethods"]) = ASN1([
+		("tag","1"),
+		("data","3"),
+		("byte","1"),
+		("byte","1"),
+		("time","0"),
+		("random","0"),
+		("sesseionid","1"),
+		("ciphersuites","2"),
+		("compmethods","1")])
+		

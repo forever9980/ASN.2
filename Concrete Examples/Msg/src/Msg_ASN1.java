@@ -1,41 +1,70 @@
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.StringReader;
+import java.nio.ByteBuffer;
 
 /**
  * ASN.2 - A model approach to secure protocol implementation v. 2016
  * (C) Buster Kim Mejborn - 2016
  * All rights reserved
  */
+class ByteObj{
+    private byte[] bytes;
+    public ByteObj(byte[] b){ bytes=b; }
+    public byte[] getBytes(){ return bytes; }
+    public void setBytes(byte[] b){ bytes = b; }
+}
+
 public class Msg_ASN1 {
-    String NA,NB,A;
+    ByteObj NA,NB,A;
+    byte[] NALength={0x00,0x00,0x03},NBLength={0x00,0x00,0x03},ALength = {0x00,0x00,0x0F}; // Length fields are known from parsing
+    byte tag;
     int numNodes = 3;
     /*******************************
      *                             *
      *         Constructors        *
      *                             *
      ******************************/
-    public Msg_ASN1(String NA, String NB, String A) throws InvalidInputException {
-        // TODO: Implement me
+    public Msg_ASN1(byte tag,byte[] NA, byte[] NB, byte[] A) throws InvalidInputException {
+        if(isValidInput(NA,1) && isValidInput(NB,2) && isValidInput(A,3)){
+            this.tag = tag;
+            this.NA = new ByteObj(NA);
+            this.NB = new ByteObj(NB);
+            this.A = new ByteObj(A);
+        }else {
+            throw new InvalidInputException();
+        }
     }
 
-    public Msg_ASN1(String format) throws Exception {
-        // TODO: Check if document builder can be used for ASN1, else find another parser.
-        Document document = loadXMLFromString(format);
-        Node node = document.getDocumentElement().getFirstChild();                                          // Get the first child node
+    /**
+     * Unsafe parser! No checks are implemented yet.
+     */
 
-        for (int i = 1; i<=numNodes; i++){
+    public Msg_ASN1(byte[] format) throws InvalidInputException {
+        // For the TLS Handshake HANDSHAKE(tag, data) = tag · [data]3
+        // Format would be [tag][length][length][length][data][data][data]...
+        int pointer = 1;
+
+        // Check the tag number is correct
+        if (tag != format[0]) throw new InvalidInputException();
+
+        for(int i=1; i<=numNodes;i++){
             switch(i){
-                case 1: this.NA = node.getTextContent(); break;
-                case 2: this.NB = node.getTextContent(); break;
-                case 3: this.A = node.getTextContent(); break;
+                case 1: pointer = copyArray(format,pointer,NA,NALength); break;
+                case 2: pointer = copyArray(format,pointer,NB,NBLength); break;
+                case 3: pointer = copyArray(format,pointer,A,ALength); break;
             }
-            node = node.getNextSibling().getNextSibling();                                                 // Step untill next node
         }
+
+    }
+
+    private int copyArray(byte[] format, int pointer,ByteObj item,byte[] itemLength) throws InvalidInputException {
+        byte[] length;
+        //Check that the length bytes are correct
+        length = new byte[item.getBytes().length];
+        System.arraycopy(format,1,length,0,item.getBytes().length);
+        if(length != itemLength) throw new InvalidInputException();
+        // Copy the data
+        System.arraycopy(format,length.length,item,0, ByteBuffer.wrap(length).getInt());
+        pointer+=ByteBuffer.wrap(length).getInt();
+        return pointer;
     }
 
     /*******************************
@@ -43,17 +72,19 @@ public class Msg_ASN1 {
      *       Public Methods        *
      *                             *
      ******************************/
-    public boolean verify (){
-        //Verify that this object does not contain illegal characters
-        //And all needed fields are filled
-        return (!(NA.isEmpty() && NB.isEmpty() && A.isEmpty())
-                && (isValidInput(NA) && isValidInput(NB) && isValidInput(A)));
-    }
-
-    public String encode (){
-        // TODO: Serialize / Pretty print the object
-        return "";
-    }
+    public byte[] encode (){
+        int length = (1) + (NALength.length+NA.getBytes().length) + (NBLength.length+NB.getBytes().length) + (ALength.length+A.getBytes().length);
+        byte[] bytes = new byte[length];
+        int pointer = 1;
+        System.arraycopy(tag,0,bytes,0,1);
+        System.arraycopy(NALength,0,bytes,pointer,NALength.length); pointer+=NALength.length;
+        System.arraycopy(NA.getBytes(),0,bytes,pointer,NA.getBytes().length); pointer += NA.getBytes().length;
+        System.arraycopy(NBLength,0,bytes,pointer,NBLength.length); pointer+=NBLength.length;
+        System.arraycopy(NB.getBytes(),0,bytes,pointer,NB.getBytes().length); pointer += NB.getBytes().length;
+        System.arraycopy(ALength,0,bytes,pointer,ALength.length); pointer+=ALength.length;
+        System.arraycopy(A.getBytes(),0,bytes,pointer,A.getBytes().length); pointer += A.getBytes().length;
+        return bytes;
+           }
 
 
     /*******************************
@@ -62,18 +93,33 @@ public class Msg_ASN1 {
      *                             *
      ******************************/
 
-    private boolean isValidInput(String chars){
-        // TODO: Implement me
+    private boolean isValidInput(byte[] bytes,int id){
+        int length = bytes.length;
+        switch(id){
+            case 1: return isValidLength(NALength,length);
+            case 2: return isValidLength(NBLength,length);
+            case 3: return isValidLength(ALength,length);
+        }
         return false;
     }
 
-    private static Document loadXMLFromString(String xml) throws Exception
-    {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        InputSource is = new InputSource(new StringReader(xml));
-        return builder.parse(is);
+    /**
+     * Tests whether the input has the length specified in the format.
+     * @param itemLength
+     * @param length
+     * @return
+     */
+    private boolean isValidLength(byte[] itemLength,int length) {
+        if(itemLength.length%2==0){
+            return (length== ByteBuffer.wrap(itemLength).getInt());
+        }else{
+            byte[] b = new byte[itemLength.length+1];
+            System.arraycopy(new byte[] {0x00},0,b,0,1);
+            System.arraycopy(itemLength,0,b,1,itemLength.length);
+            return (length==ByteBuffer.wrap(b).get());
+        }
     }
+
 
     /******************************
      *                             *
@@ -81,10 +127,12 @@ public class Msg_ASN1 {
      *                             *
      ******************************/
 
-    public String getNA(){ return NA; }
-    public String getNB(){ return NB; }
-    public String getA() { return A;  }
-    public void setNA(String NA){ this.NA = isValidInput(NA)? NA : this.NA;  }
-    public void setNB(String NB){ this.NB = isValidInput(NB) ? NB : this.NB; }
-    public void setA(String A)  { this.A  = isValidInput(A)  ? A : this.A; }
+    public byte[] getNA(){ return NA.getBytes(); }
+    public byte[] getNB(){ return NB.getBytes(); }
+    public byte[] getA() { return A.getBytes();  }
+    public byte getTag() { return tag; }
+    /*
+    public void setNA(byte[] NA){ this.NA = isValidInput(NA,1)? NA : this.NA;  }
+    public void setNB(byte[] NB){ this.NB = isValidInput(NB,2) ? NB : this.NB; }
+    public void setA(byte[] A)  { this.A  = isValidInput(A,3)  ? A : this.A; }*/
 }

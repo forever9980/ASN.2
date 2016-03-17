@@ -24,6 +24,8 @@ $char    = [0-9a-zA-Z]
 tokens :-
   $white+             ;
   "#".*               ;
+  "XML"               { (\ p s -> TXML p) }
+  "ASN1"              { (\ p s -> TASN p) }
   $char+              { (\ p s -> TATOM p s) }
   "("                 { (\ p s -> TOPENP p)  }
   ")"                 { (\ p s -> TCLOSEP p) }
@@ -43,6 +45,8 @@ data Token=
    | TQUOTE AlexPosn
    | TCOMMA AlexPosn
    | TEQ AlexPosn
+   | TXML AlexPosn
+   | TASN AlexPosn
    deriving (Eq,Show)
 
 token_posn (TATOM p _)=p
@@ -53,6 +57,8 @@ token_posn (TCLOSESQ p)=p
 token_posn (TQUOTE p)=p
 token_posn (TCOMMA p)=p
 token_posn (TEQ p)=p
+token_posn (TXML p)=p
+token_posn (TASN p)=p
 
 type Ident = String
 }
