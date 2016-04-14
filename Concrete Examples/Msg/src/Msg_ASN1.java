@@ -7,27 +7,49 @@ import java.nio.ByteBuffer;
  */
 class ByteObj{
     private byte[] bytes;
-    public ByteObj(byte[] b){ bytes=b; }
+    private byte[] length;
+
+    protected ByteObj (byte[] l) {
+        length = l;
+    }
+    protected ByteObj (byte b){
+        setByte(b);
+        setLength(new byte[] {1});
+    }
+
     public byte[] getBytes(){ return bytes; }
+    public byte[] getLength() { return length; }
+
+    public void setByte(byte b) { setBytes(new byte[] {b});}
     public void setBytes(byte[] b){ bytes = b; }
+    public void setLength(byte[] l) {
+        length = l;
+    }
 }
 
 public class Msg_ASN1 {
-    ByteObj NA,NB,A;
-    byte[] NALength={0x00,0x00,0x03},NBLength={0x00,0x00,0x03},ALength = {0x00,0x00,0x0F}; // Length fields are known from parsing
-    byte tag;
-    int numNodes = 3;
+    private byte[] ALength = {0,0,7}; // Only set as fixed 7, due to testing.
+    private ByteObj tag = new ByteObj((byte)0);
+            
+    private ByteObj NA = new ByteObj(new byte[3]);
+    private ByteObj NB = new ByteObj(new byte[3]);
+    private ByteObj A = new ByteObj(ALength);
+    int numNodes = 4;
     /*******************************
      *                             *
      *         Constructors        *
      *                             *
      ******************************/
-    public Msg_ASN1(byte tag,byte[] NA, byte[] NB, byte[] A) throws InvalidInputException {
-        if(isValidInput(NA,1) && isValidInput(NB,2) && isValidInput(A,3)){
-            this.tag = tag;
-            this.NA = new ByteObj(NA);
-            this.NB = new ByteObj(NB);
-            this.A = new ByteObj(A);
+    public Msg_ASN1(byte tag,byte[] NA,byte[] NALength, byte[] NB, byte[] NBLength, byte[] A) throws InvalidInputException {
+        if(isValidInput(this.NA,NA,NALength) && isValidInput(this.NB,NB,NBLength) && isValidInput(this.A,A,ALength)){
+            // TODO: Should have a check to see if the length field has the proper value AND length
+            // TODO: Should only take the x last bytes
+            this.tag.setByte(tag);
+            this.NA.setBytes(NA);
+            this.NA.setLength(NALength);
+            this.NB.setBytes(NB);
+            this.NB.setLength(NBLength);
+            this.A.setBytes(A);
         }else {
             throw new InvalidInputException();
         }
@@ -38,33 +60,52 @@ public class Msg_ASN1 {
      */
 
     public Msg_ASN1(byte[] format) throws InvalidInputException {
-        // For the TLS Handshake HANDSHAKE(tag, data) = tag · [data]3
-        // Format would be [tag][length][length][length][data][data][data]...
-        int pointer = 1;
-
+        int pointer = 0;
         // Check the tag number is correct
-        if (tag != format[0]) throw new InvalidInputException();
-
         for(int i=1; i<=numNodes;i++){
             switch(i){
-                case 1: pointer = copyArray(format,pointer,NA,NALength); break;
-                case 2: pointer = copyArray(format,pointer,NB,NBLength); break;
-                case 3: pointer = copyArray(format,pointer,A,ALength); break;
+                // If the protocol specifies that there is no length field eg. fixed length
+                // just put the corresponding data in.
+                case 1: pointer = parse(format,pointer,tag,false); break;
+                case 2: pointer = parse(format,pointer,NA,true);  break;
+                case 3: pointer = parse(format,pointer,NB,true); break;
+                case 4: pointer = parse(format,pointer,A,false); break;
             }
         }
-
     }
 
-    private int copyArray(byte[] format, int pointer,ByteObj item,byte[] itemLength) throws InvalidInputException {
-        byte[] length;
-        //Check that the length bytes are correct
-        length = new byte[item.getBytes().length];
-        System.arraycopy(format,1,length,0,item.getBytes().length);
-        if(length != itemLength) throw new InvalidInputException();
-        // Copy the data
-        System.arraycopy(format,length.length,item,0, ByteBuffer.wrap(length).getInt());
-        pointer+=ByteBuffer.wrap(length).getInt();
-        return pointer;
+
+    private int parse(byte[] format, int pointer, ByteObj item,boolean hasLengthField) throws InvalidInputException {
+        int p = pointer;
+        if(hasLengthField){
+            // First check the length of the length fields
+            int lengthFieldLength = item.getLength().length;
+            // and copy the corresponding length data.
+            byte[] formatLength = new byte[lengthFieldLength];
+            System.arraycopy(format,p,formatLength,0,lengthFieldLength);
+            // Move the pointer the to behind the length field
+            p += lengthFieldLength;
+            // If the length field is already defined as something else than 0
+            // check that the length field is correct
+            if(getIntFromBytes(item.getLength()) != 0 &&
+                    getIntFromBytes(item.getLength()) != getIntFromBytes(formatLength)){
+                throw new InvalidInputException();
+            }
+            // Copy the length field into the item construct
+            item.setLength(formatLength);
+        }
+
+        // Convert the length field data to a count
+        int dataLength = getIntFromBytes(item.getLength());
+        // Copy the count of data
+        byte[] data = new byte[dataLength];
+        System.arraycopy(format,p,data,0,dataLength);
+        // Move the pointer to after the data section
+        p += dataLength;
+        // Put the new data into the item
+        item.setBytes(data);
+        // Return the new pointer
+        return p;
     }
 
     /*******************************
@@ -73,16 +114,24 @@ public class Msg_ASN1 {
      *                             *
      ******************************/
     public byte[] encode (){
-        int length = (1) + (NALength.length+NA.getBytes().length) + (NBLength.length+NB.getBytes().length) + (ALength.length+A.getBytes().length);
+        int length =
+                (1)
+                + (NA.getLength().length + getIntFromBytes(NA.getLength()))
+                + (NB.getLength().length + getIntFromBytes(NB.getLength()))
+                + (getIntFromBytes(A.getLength()));
         byte[] bytes = new byte[length];
-        int pointer = 1;
-        System.arraycopy(tag,0,bytes,0,1);
-        System.arraycopy(NALength,0,bytes,pointer,NALength.length); pointer+=NALength.length;
-        System.arraycopy(NA.getBytes(),0,bytes,pointer,NA.getBytes().length); pointer += NA.getBytes().length;
-        System.arraycopy(NBLength,0,bytes,pointer,NBLength.length); pointer+=NBLength.length;
-        System.arraycopy(NB.getBytes(),0,bytes,pointer,NB.getBytes().length); pointer += NB.getBytes().length;
-        System.arraycopy(ALength,0,bytes,pointer,ALength.length); pointer+=ALength.length;
-        System.arraycopy(A.getBytes(),0,bytes,pointer,A.getBytes().length); pointer += A.getBytes().length;
+        int p = 0;
+        // Important! Since "tag" and "A" doesn't have a length (it's fixed length of 1 byte)
+        // should not include the length field
+        System.arraycopy(tag.getBytes(),0,bytes,p,getIntFromBytes(tag.getLength())); p+= tag.getBytes().length;
+
+        System.arraycopy(NA.getLength(),0,bytes,p,NA.getLength().length); p+=NA.getLength().length;
+        System.arraycopy(NA.getBytes(),0,bytes,p,NA.getBytes().length); p += NA.getBytes().length;
+
+        System.arraycopy(NB.getLength(),0,bytes,p,NB.getLength().length); p+=NB.getLength().length;
+        System.arraycopy(NB.getBytes(),0,bytes,p,NB.getBytes().length); p += NB.getBytes().length;
+
+        System.arraycopy(A.getBytes(),0,bytes,p,A.getBytes().length); p += A.getBytes().length; p+=A.getBytes().length;
         return bytes;
            }
 
@@ -92,32 +141,22 @@ public class Msg_ASN1 {
      *       Private methods       *
      *                             *
      ******************************/
-
-    private boolean isValidInput(byte[] bytes,int id){
-        int length = bytes.length;
-        switch(id){
-            case 1: return isValidLength(NALength,length);
-            case 2: return isValidLength(NBLength,length);
-            case 3: return isValidLength(ALength,length);
-        }
-        return false;
+    private boolean isValidInput(ByteObj item,byte[] bytes, byte[] length){
+        int dataLength = bytes.length;
+        int lengthData = getIntFromBytes(length);
+        return (item.getLength().length == length.length && dataLength == lengthData);
     }
 
-    /**
-     * Tests whether the input has the length specified in the format.
-     * @param itemLength
-     * @param length
-     * @return
-     */
-    private boolean isValidLength(byte[] itemLength,int length) {
-        if(itemLength.length%2==0){
-            return (length== ByteBuffer.wrap(itemLength).getInt());
-        }else{
-            byte[] b = new byte[itemLength.length+1];
+    private int getIntFromBytes(byte[] item) {
+        byte[] b = item;
+        int p = 0;
+        while (b.length % 4 != 0){
+            b = new byte[b.length+1];
+            p++;
             System.arraycopy(new byte[] {0x00},0,b,0,1);
-            System.arraycopy(itemLength,0,b,1,itemLength.length);
-            return (length==ByteBuffer.wrap(b).get());
+            System.arraycopy(item,0,b,p,item.length);
         }
+        return ByteBuffer.wrap(b).getInt();
     }
 
 
@@ -130,9 +169,4 @@ public class Msg_ASN1 {
     public byte[] getNA(){ return NA.getBytes(); }
     public byte[] getNB(){ return NB.getBytes(); }
     public byte[] getA() { return A.getBytes();  }
-    public byte getTag() { return tag; }
-    /*
-    public void setNA(byte[] NA){ this.NA = isValidInput(NA,1)? NA : this.NA;  }
-    public void setNB(byte[] NB){ this.NB = isValidInput(NB,2) ? NB : this.NB; }
-    public void setA(byte[] A)  { this.A  = isValidInput(A,3)  ? A : this.A; }*/
 }

@@ -19,21 +19,22 @@ module Lexer (Token(..),
 
 %wrapper "posn"
 
-$char    = [0-9a-zA-Z]
+$char    = [0-9a-zA-Z_]
 
 tokens :-
   $white+             ;
   "#".*               ;
   "XML"               { (\ p s -> TXML p) }
-  "ASN1"              { (\ p s -> TASN p) }
+  "ASN1"              { (\ p s -> TASN1 p) }
   $char+              { (\ p s -> TATOM p s) }
   "("                 { (\ p s -> TOPENP p)  }
   ")"                 { (\ p s -> TCLOSEP p) }
   "["                 { (\ p s -> TOPENSQ p) }
   "]"                 { (\ p s -> TCLOSESQ p) }
-  ['"']               { (\ p s -> TQUOTE p) }
   ","                 { (\ p s -> TCOMMA p) }
   "="                 { (\ p s -> TEQ p) }
+  "byte"              { (\ p s -> TBYTE p) }
+  "*"                 { (\ p s -> TSTAR p) }
 {
 
 data Token= 
@@ -42,11 +43,13 @@ data Token=
    | TCLOSEP AlexPosn
    | TOPENSQ AlexPosn
    | TCLOSESQ AlexPosn
-   | TQUOTE AlexPosn
    | TCOMMA AlexPosn
    | TEQ AlexPosn
    | TXML AlexPosn
    | TASN AlexPosn
+   | TCOLON AlexPosn
+   | TBYTE AlexPosn
+   | TSTART AlexPosn
    deriving (Eq,Show)
 
 token_posn (TATOM p _)=p
@@ -54,11 +57,13 @@ token_posn (TOPENP p)=p
 token_posn (TCLOSEP p)=p
 token_posn (TOPENSQ p)=p
 token_posn (TCLOSESQ p)=p
-token_posn (TQUOTE p)=p
 token_posn (TCOMMA p)=p
 token_posn (TEQ p)=p
 token_posn (TXML p)=p
 token_posn (TASN p)=p
+token_posn (TCOLON p)=p
+token_posn (TBYTE p)=p
+token_posn (TSTAR p)=p
 
 type Ident = String
 }

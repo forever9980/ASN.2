@@ -23,34 +23,37 @@ import Ast
   ')'           { TCLOSEP _ }
   '['           { TOPENSQ _ }
   ']'           { TCLOSESQ _}
-  '"'           { TQUOTE _}
   ','           { TCOMMA _}
   '='           { TEQ _}
+  ':'           { TCOLON _}
+  Byte          { TBYTE _}
+  '*'           { TSTART _}
   XML           { TXML _}
-  ASN           { TASN _}
+  ASN1          { TASN1 _}
 %%
+
+Format   : ident '(' Ids ')' '=' FormatBody {Format $1 $3 $6}
 Formats  : Formats_ {reverse $1}
 Formats_ : Format {$1 : []}
          | Formats_ Format {$2 : $1}
 
-Format : ident '(' '"' ident '"' ',' '[' Ids ']' ')' '=' Concrete {Format $4 $8 $12}
-
-Id : '"' ident '"' {$2}
-
+Id   : ident
 Ids  : Ids_ {reverse $1}
-Ids_ : Id {$1 : []}
-     | Ids_ ',' Id {$3 : $1}
+Ids_ : Ids_ ',' Id {$3 : $1}
 
-Concrete : XML '(' '[' Fields_XML ']' ')' {XML "XML" $4}
-         | ASN '(' '[' Fields_ASN ']' ')' {ASN "ASN1" $4}
+FormatBody  : ASN1 '[' Fields_ASN ']' {ASN $3}
+            | XML '[' Fields_XML ']' {XML $3}
 
-Field_ASN   : '(' '"' ident '"' ',' '"' ident '"' ')' {Field_ASN $3 $7}
+Field_ASN   : Byte '(' ident ')' {Byte ident}
+            | ident '[' ident ']' {Fixed $1 $3}
+            | ident '[' '*' ident ']' {LengthF $1 $4}
 Fields_ASN  : Fields_ASN_ {reverse $1}
 Fields_ASN_ : Field_ASN {$1 : []}
             | Fields_ASN_ ',' Field_ASN {$3 : $1}
 
 
-Field_XML   : '(' '"' ident '"' ',' '"' ident '"' ',' '"' Encoding '"' ')' {Field_XML $3 $7 $11}
+{-XML Is currently unsupported-}
+Field_XML   : ident ':' ident '(' Encoding ')' {Field_XML $1 $3 $5}
 Fields_XML  : Fields_XML_ {reverse $1}
 Fields_XML_ : Field_XML {$1 : []}
             | Fields_XML_ ',' Field_XML {$3 : $1}

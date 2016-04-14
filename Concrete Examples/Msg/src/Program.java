@@ -5,7 +5,7 @@
  */
 public class Program {
     public static void main(String args[]) throws Exception, InvalidInputException {
-        TestXML testXML = new TestXML();
+        //TestXML testXML = new TestXML();
         TestASN testASN = new TestASN();
     }
 }

@@ -1,31 +1,31 @@
-msg1("msg1",["NA","NB","A"]) = XML([
-		("NA","nonce","Base64"),
-		("NB","nonce","Base64"),
-		("A","agent","String")])
+msg2 (NA,NB,A,B) = XML [
+	NA:nonce(Base64),
+	NB:nonce(Base64),
+	A:agent(String),
+	B:agent(String)
+]
 
-msg1("msg2",["NA","NB","A","B"]) = XML([
-		("NA","nonce","Base64"),
-		("NB","nonce","Base64"),
-		("A","agent","String"),
-		("B","agent","String")])
+HandShake (tag,data) = ASN1 [
+	tag[1],
+	data[*3]
+]
 
-msg("msg1",["NA","NB","A"]) = ASN1([
-		("NA","1"),
-		("NB","1"),
-		("A","2")])
+Hello_Req() = ASN1 [
+	byte(0),
+	Empty
+]
 
-msg("Handshake",["tag","data"]) = ASN1([
-		("tag","1"),
-		("data","3")])
+Client_Hello (time,random,session_id,cipher_suites,comp_methods) = ASN1 [
+	byte(1),
+	byte(3),
+	byte(3),
+	time[1],
+	random[1],
+	session_id[*1],
+	cipher_suites[*2],
+	comp_methods[*1]
+]
 
-msg("serverhello",["tag","data","byte","byte","time","random","sessionid","ciphersuites","compmethods"]) = ASN1([
-		("tag","1"),
-		("data","3"),
-		("byte","1"),
-		("byte","1"),
-		("time","0"),
-		("random","0"),
-		("sesseionid","1"),
-		("ciphersuites","2"),
-		("compmethods","1")])
-		
+Server_Hello (time,random,session_id,chosen_cipher,chosen_comp) = ASN1 [
+	HandShake(byte(2),
+]
