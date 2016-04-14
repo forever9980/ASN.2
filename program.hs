@@ -82,4 +82,4 @@ makeXMLDoc name fields =
     MakeXMLDoc.makePrivateMethods <$>
     MakeXMLDoc.makeGettersAndSetters fields
   )<$>
-  text "}"  
+  text "}"
