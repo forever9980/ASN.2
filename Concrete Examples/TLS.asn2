@@ -1,0 +1,72 @@
+
+#test1(something) = ASN1 [
+#	something[*3],
+#	byte(2)
+#]
+
+#test2(something) = ASN1 [
+#	byte(1),
+#	byte(1)
+#]
+
+#################################
+#								#
+#		Example descrition		#
+#		  ASN1 ->  TLS			#
+#								#
+#################################
+
+## Handshake pr definition will NOT
+## be found as disjoint with other
+## formats
+
+#HandShake (tag,data) = ASN1 [
+#	tag[1],
+#	data[*3]
+#]
+
+Hello_Req () = ASN1 [
+	byte(0)
+]
+
+Client_Hello (time,random,session_id,cipher_suites,comp_methods) = ASN1 [
+	byte(1),
+	byte(3),
+	byte(3),
+	time[1],
+	random[1],
+	session_id[*1],
+	cipher_suites[*2],
+	comp_methods[*1]
+]
+
+Server_Hello (time,random,session_id,chosen_cipher,chosen_comp) = ASN1 [
+	byte(2),
+	byte(3),
+	byte(3),
+	time[1],
+	random[2],
+	session_id[*1],
+	chosen_cipher[1],
+	chosen_comp[1]
+]
+
+#################################
+#								#
+#		Example descrition		#
+#		  ASN1 ->  XML			#
+#								#
+#################################
+
+#msg1(NA,NB,A) = XML [
+#	NA(nonce),
+#	NB(nonce),
+#	A(agent)
+#	]
+
+#msg2(NA,NB) = XML [
+#	NA(nonce),
+#	NB(nonce),
+#	A(agent),
+#	B(agent)
+#]
