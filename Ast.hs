@@ -46,7 +46,8 @@ isDisjoint (format:formats) =
 disjoint :: [Field] -> [Field] -> Bool
 disjoint [] [] = False
 disjoint [] ((Byte c):f2) = True
-disjoint [] ((Unbounded x):f2) = True
+disjoint ((Unbounded x):[]) ((Unbounded y):f2) = not (f2 == [])
+disjoint [] ((Unbounded x):f2) = disjoint [] f2
 disjoint [] ((LengthF _ _):f2) = disjoint [] f2
 disjoint [] ((Fixed _ l):f2) = if (l>0) then True else disjoint [] f2
 disjoint [] ((Enc _):f2) = disjoint [] f2
