@@ -5,27 +5,7 @@ import java.nio.ByteBuffer;
  * (C) Buster Kim Mejborn - 2016
  * All rights reserved
  */
-class ByteObj{
-    private byte[] bytes;
-    private byte[] length;
 
-    protected ByteObj (byte[] l) {
-        length = l;
-    }
-    protected ByteObj (byte b){
-        setByte(b);
-        setLength(new byte[] {1});
-    }
-
-    public byte[] getBytes(){ return bytes; }
-    public byte[] getLength() { return length; }
-
-    public void setByte(byte b) { setBytes(new byte[] {b});}
-    public void setBytes(byte[] b){ bytes = b; }
-    public void setLength(byte[] l) {
-        length = l;
-    }
-}
 
 public class Msg_ASN1 {
     private byte[] ALength = {0,0,7}; // Only set as fixed 7, due to testing.
@@ -169,4 +149,26 @@ public class Msg_ASN1 {
     public byte[] getNA(){ return NA.getBytes(); }
     public byte[] getNB(){ return NB.getBytes(); }
     public byte[] getA() { return A.getBytes();  }
+}
+
+class ByteObj{
+    private byte[] bytes;
+    private byte[] length;
+
+    protected ByteObj (byte[] l) {
+        length = l;
+    }
+    protected ByteObj (byte b){
+        setByte(b);
+        setLength(new byte[] {1});
+    }
+
+    public byte[] getBytes(){ return bytes; }
+    public byte[] getLength() { return length; }
+
+    public void setByte(byte b) { setBytes(new byte[] {b});}
+    public void setBytes(byte[] b){ bytes = b; }
+    public void setLength(byte[] l) {
+        length = l;
+    }
 }

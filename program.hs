@@ -16,8 +16,7 @@ import Data.List
 import Lexer
 import Parser
 import Ast
-import MakeXMLDoc hiding(level)
-import MakeASNDoc hiding(level)
+import MakeDoc hiding(level)
 
 level :: Int
 level = 2
@@ -25,61 +24,33 @@ level = 2
 main :: IO ()
 main = do
   createDirectoryIfMissing True "out"
-  inp <- readFile "Concrete Examples/Msg.asn2"
+  inp <- readFile "Concrete Examples/TLS.asn2"
   let tokens = alexScanTokens inp
   let formats = parser tokens
-{-
-  if not $ disjoint formats then
+  if not (isDisjoint formats) then
     print "Formats are not disjoint. Leaving"
-  else -}
-  writeClasses formats
+  else
+    writeClasses formats
 
 writeClasses :: [Format] -> IO ()
 writeClasses [] = putStr "Done outputting classes."
-writeClasses ((Format name (XML format fields)):xs) 
-  = do writeXML name fields
-       writeClasses xs
-writeClasses ((Format name (ASN format fields)):xs) 
-  = do writeASN1 name fields
+writeClasses ((Format name ids body):xs) 
+  = do writeDoc name ids body
        writeClasses xs
 
-writeASN1 :: String -> [Field] -> IO ()
-writeASN1 name fields = do 
-  { handle <- openFile ("out/" ++ name ++ "_ASN" ++ ".java") WriteMode
-    ; hPutDoc handle (makeASNDoc (name ++ "_ASN") fields)
+writeDoc :: String -> [Id] -> FormatBody -> IO ()
+{- Perhaps should include checks for invalid tags in XML -}
+writeDoc name ids body = do
+  { handle <- openFile ("out/" ++ name ++ ".java") WriteMode
+    ; hPutDoc handle (makeDoc name ids body)
     ; hClose handle
   }
 
-writeXML :: String -> [Field] -> IO ()
-writeXML name fields = do
-  {-if hasValidTags fields
-    then do -}
-      { handle <- openFile ("out/" ++ name ++ "_XML" ++ ".java") WriteMode
-      ; hPutDoc handle (makeXMLDoc (name ++ "_XML") fields)
-      ; hClose handle
-      }
-    {-else error "Tags contain invalid characters"-}
-
-makeASNDoc :: String -> [Field] -> Doc
-makeASNDoc name fields =
-  MakeASNDoc.makeImports <$>
+makeDoc :: String -> [String] -> FormatBody -> Doc
+makeDoc name ids body =
+  makeImports body <$>
   nest level
-  (MakeASNDoc.makeHeader name <$>
-    MakeASNDoc.makeByteObjClass <$>
-    MakeASNDoc.makeNumNodes fields 0 <$>
-    MakeASNDoc.makePrivateVars fields
-  )
-
-makeXMLDoc :: String -> [Field] -> Doc
-makeXMLDoc name fields = 
-  MakeXMLDoc.makeImports <$> 
-  nest level
-  (MakeXMLDoc.makeHeader name <$>
-    MakeXMLDoc.makeNumNodes fields 0 <$>
-    MakeXMLDoc.makePrivateVars fields <$>
-    MakeXMLDoc.makeConstructor fields name <$>
-    MakeXMLDoc.makeEncode fields name <$>
-    MakeXMLDoc.makePrivateMethods <$>
-    MakeXMLDoc.makeGettersAndSetters fields
+  (makeHeader name <$>
+    makeNumNodes ids 0
   )<$>
   text "}"
