@@ -34,7 +34,7 @@ Client_Hello (time,random,session_id,cipher_suites,comp_methods) = ASN1 [
 	byte(3),
 	byte(3),
 	time[1],
-	random[1],
+	random[2],
 	session_id[*1],
 	cipher_suites[*2],
 	comp_methods[*1]

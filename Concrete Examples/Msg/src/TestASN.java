@@ -1,20 +1,29 @@
 /**
  * Created by buster on 3/13/16.
  */
-public class TestASN {
-    public TestASN() throws InvalidInputException {
-        /**
-         * Test that a message can be constructed, if formed correctly
-         */
-        Client_Hello msg_asn1 = null;
-        byte tag = 1;
-        byte[] NA  = "NAString".getBytes(), NB = "NBString".getBytes(), A = "AString".getBytes();
-        byte[] NAL = {0,0,8};
-        byte[] NBL = {0,0,8};
+class TestASN {
+    private byte[] time;
+    private byte[] random;
+    private byte[] session_id;
+    private byte[] cipher_suites;
+    private byte[] comp_methods;
+    private Client_Hello client_hello = null;
 
+    TestASN() {
+        time = new byte[] {1};
+        random = new byte[] {2,2};
+        session_id = new byte[] {3,3,3};
+        cipher_suites = ("cipher_suites").getBytes();
+        comp_methods = new byte[] {5,5,5,5};
+    }
+
+    void run() throws InvalidInputException{
+        /**
+        * Test that a message can be constructed, if formed correctly
+        */
         try {
-            msg_asn1 = new Client_Hello(tag,NA,NAL,NB,NBL,A);
-            PrintVariables("Test1",msg_asn1);
+            client_hello = new Client_Hello(time,random,session_id,cipher_suites,comp_methods);
+            PrintVariables("Test1",client_hello);
         } catch (InvalidInputException e) {
             e.printStackTrace();
             System.out.println("Test 1 failed");
@@ -24,31 +33,31 @@ public class TestASN {
          * Try to get an encoded output
          */
         System.out.println("Test2");
-        byte[] bytes = msg_asn1.encode();
-        for(int i = 0; i<bytes.length;i++){
-            System.out.print(bytes[i]);
+        byte[] bytes = client_hello.encode();
+        for(Byte b : bytes){
+            System.out.print(b);
         }
-        System.out.println();
-        System.out.println(new String(bytes));
-
 
         /**
          * Try to create an object from an encoded output
          */
-        System.out.println("Test 3");
-        Client_Hello msg_xml3 = new Client_Hello(bytes);
-        PrintVariables("Test4",msg_asn1);
+        Client_Hello client_hello2 = new Client_Hello(bytes);
+        PrintVariables("Test3", client_hello2);
 
         /**
          * Test corner cases
          */
     }
 
-    private static void PrintVariables(String test, Client_Hello msg_asn) {
+    private static void PrintVariables(String test, Client_Hello client_hello) {
+        System.out.println();
         System.out.println(test);
-        System.out.println("NA = " + new String(msg_asn.getNA()));
-        System.out.println("NB = " + new String(msg_asn.getNB()));
-        System.out.println("A = " + new String(msg_asn.getA()));
+        System.out.println("time = " + new String(client_hello.getTime()));
+        System.out.println("random = " + new String(client_hello.getRandom()));
+        System.out.println("session_id = " + new String(client_hello.getSession_id()));
+        System.out.println("cipher_suites = " + new String(client_hello.getCipher_suites()));
+        System.out.println("comp_methods = " + new String(client_hello.getComp_methods()));
+
         System.out.println();
     }
 }

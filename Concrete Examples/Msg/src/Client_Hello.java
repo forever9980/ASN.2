@@ -7,20 +7,19 @@ import java.nio.ByteBuffer;
  */
 
 
-public class Client_Hello {
+class Client_Hello {
     private ByteObj time = new ByteObj(new byte[] {1});
     private ByteObj random = new ByteObj(new byte[] {2});
     private ByteObj session_id = new ByteObj(new byte[1]);
     private ByteObj cipher_suites = new ByteObj(new byte[2]);
     private ByteObj comp_methods = new ByteObj(new byte[1]);
 
-    int numNodes = 5;
     /*******************************
      *                             *
      *         Constructors        *
      *                             *
      ******************************/
-    public Client_Hello(byte[] time, byte[] random, byte[] session_id, byte[] cipher_suites, byte[] comp_methods) throws InvalidInputException {
+    Client_Hello(byte[] time, byte[] random, byte[] session_id, byte[] cipher_suites, byte[] comp_methods) throws InvalidInputException {
         if (!(this.time.setBytes(time))) {throw new InvalidInputException("time");}
         if (!(this.random.setBytes(random))){throw new InvalidInputException("random");}
         if (!(this.session_id.setBytes(session_id))) {throw new InvalidInputException("session_id");}
@@ -32,23 +31,16 @@ public class Client_Hello {
      * Unsafe parser! No checks are implemented yet.
      */
 
-    public Client_Hello(byte[] format) throws InvalidInputException {
+    Client_Hello(byte[] format) throws InvalidInputException {
         int pointer = 0;
-        // Check the tag number is correct
-        for(int i=1; i<=numNodes;i++){
-            switch(i){
-                // If the protocol specifies that there is no length field eg. fixed length
-                // just put the corresponding data in.
-                case 1: if(format[pointer] == 1) {pointer+=1;} else failParse(1); break;
-                case 2: if(format[pointer] == 3) {pointer+=1;} else failParse(1); break;
-                case 3: if(format[pointer] == 3) {pointer+=1;} else failParse(1); break;
-                case 4: pointer = parse(format,pointer,time,false); break;
-                case 5: pointer = parse(format,pointer,random,false);  break;
-                case 6: pointer = parse(format,pointer,session_id,true); break;
-                case 7: pointer = parse(format,pointer,cipher_suites,true); break;
-                case 8: pointer = parse(format,pointer,comp_methods,true); break;
-            }
-        }
+        if(format[pointer] == 1) {pointer+=1;} else failParse(1);
+        if(format[pointer] == 3) {pointer+=1;} else failParse(1);
+        if(format[pointer] == 3) {pointer+=1;} else failParse(1);
+        pointer = parse(format,pointer,time,false);
+        pointer = parse(format,pointer,random,false);
+        pointer = parse(format,pointer,session_id,true);
+        pointer = parse(format,pointer,cipher_suites,true);
+        pointer = parse(format,pointer,comp_methods,true);
     }
 
     private void failParse(int id) throws InvalidInputException {
@@ -114,13 +106,14 @@ public class Client_Hello {
         System.arraycopy(new byte[] {3},0,bytes,p,1); p+=1;
         System.arraycopy(new byte[] {3},0,bytes,p,1); p+=1;
 
+
         System.arraycopy(time.getBytes(),0,bytes,p,time.getBytes().length); p+= time.getBytes().length;
         System.arraycopy(random.getBytes(),0,bytes,p,random.getBytes().length); p+= random.getBytes().length;
 
         System.arraycopy(session_id.getLengthField(),0,bytes,p,session_id.getLengthField().length); p+=session_id.getLengthField().length;
         System.arraycopy(session_id.getBytes(),0,bytes,p,session_id.getBytes().length); p += session_id.getBytes().length;
 
-        System.arraycopy(cipher_suites.getLengthField(),0,bytes,p,cipher_suites.getLengthField().length); p+=cipher_suites.getLengthField().length;
+        System.arraycopy(cipher_suites.getLengthField(),0,bytes,p,cipher_suites.getLengthField().length); p+= cipher_suites.getLengthField().length;
         System.arraycopy(cipher_suites.getBytes(),0,bytes,p,cipher_suites.getBytes().length); p += cipher_suites.getBytes().length;
 
         System.arraycopy(comp_methods.getLengthField(),0,bytes,p,comp_methods.getLengthField().length); p+=comp_methods.getLengthField().length;
@@ -135,13 +128,6 @@ public class Client_Hello {
      *       Private methods       *
      *                             *
      ******************************/
-    private boolean isValidInput(ByteObj item,byte[] bytes){
-        if (ByteBuffer.wrap(item.getLengthField()).getInt() > 0) {
-            return (bytes.length == ByteBuffer.wrap(item.getLengthField()).getInt());
-        }
-        return (bytes.length <= Math.pow(2,(8* item.getLengthField().length)));
-    }
-
     private int getIntFromBytes(byte[] item) {
         byte[] b = item;
         int p = 0;
@@ -161,11 +147,11 @@ public class Client_Hello {
      *                             *
      ******************************/
 
-    public byte[] getTime() {return time.getBytes();}
-    public byte[] getRandom() {return random.getBytes();}
-    public byte[] getSession_id() {return session_id.getBytes();}
-    public byte[] getCipher_suites() {return cipher_suites.getBytes();}
-    public byte[] getComp_methods() {return comp_methods.getBytes();}
+    byte[] getTime() {return time.getBytes();}
+    byte[] getRandom() {return random.getBytes();}
+    byte[] getSession_id() {return session_id.getBytes();}
+    byte[] getCipher_suites() {return cipher_suites.getBytes();}
+    byte[] getComp_methods() {return comp_methods.getBytes();}
 
     public void setTime(byte[] bytes) throws InvalidInputException {
         if (!time.setBytes(bytes)) {
@@ -208,6 +194,17 @@ class ByteObj{
 
     byte[] getBytes(){ return bytes; }
     byte[] getLengthField() { return length; }
+    private int getIntFromBytes(byte[] item) {
+        byte[] b = item;
+        int p = 0;
+        while (b.length % 4 != 0){
+            b = new byte[b.length+1];
+            p++;
+            System.arraycopy(new byte[] {0x00},0,b,0,1);
+            System.arraycopy(item,0,b,p,item.length);
+        }
+        return ByteBuffer.wrap(b).getInt();
+    }
 
     boolean setBytes(byte[] b){
         if(isValidInput(b)){
@@ -221,17 +218,23 @@ class ByteObj{
     void setLength(byte[] l) { length = l; }
 
     private boolean isValidInput(byte[] bytes){
-        if (ByteBuffer.wrap(getLengthField()).getInt() > 0) {
-            return (bytes.length == ByteBuffer.wrap(getLengthField()).getInt());
+        if (getLengthField() != null && getIntFromBytes(getLengthField()) > 0) {
+            return (bytes.length == getIntFromBytes(getLengthField()));
         }
-        return (bytes.length <= Math.pow(2,(8* getLengthField().length)));
+        return (bytes.length <= Math.pow(2,(8 * getLengthField().length)));
     }
 
     private void setLength() {
-        int l = ByteBuffer.wrap(bytes).getInt();
-        length = new byte[l];
-        for (int i = 0; i<l; i++){
-            length[l-i-1] = (byte) (l >> 8*i);
+        int l = bytes.length;
+        int numBytes = (l / 256) + 1;
+        byte [] length1 = new byte[numBytes];
+        for (int i = 0; i<numBytes; i++){
+            length1[numBytes-1-i] = (byte) ((l >> i*8) & 0xFF);
         }
-    };
+        System.arraycopy(length1,0,length,(length.length-length1.length),length1.length);
+        for(byte b:length){
+            System.out.print(b);
+        }
+        System.out.println();
+    }
 }

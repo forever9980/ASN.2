@@ -12,7 +12,7 @@ import java.util.Base64;
  * (C) Buster Kim Mejborn - 2016
  * All rights reserved
  */
-public class Msg_XML {
+class Msg_XML {
     private byte[] NA;
     private byte[] NB;
     private byte[] A;
@@ -22,7 +22,7 @@ public class Msg_XML {
      *         Constructors        *
      *                             *
      ******************************/
-    public Msg_XML(byte[] NA, byte[] NB, byte[] A) throws InvalidInputException {
+    Msg_XML(byte[] NA, byte[] NB, byte[] A) throws InvalidInputException {
         if (isValidInput(NA) && isValidInput(NB) && isValidInput(A) ){
             this.NA = NA;
             this.NB = NB;
