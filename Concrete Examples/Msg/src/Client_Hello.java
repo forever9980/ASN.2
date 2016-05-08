@@ -50,6 +50,7 @@ class Client_Hello {
 
 
     private int parse(byte[] format, int pointer, ByteObj item,boolean hasVariableLengthField) throws InvalidInputException {
+        // TODO: The parser should include checks for buffer overflows, even though it is not a problem in Java
         int p = pointer;
         if(hasVariableLengthField){
             // First check the length of the length fields
@@ -100,8 +101,6 @@ class Client_Hello {
 
         byte[] bytes = new byte[length];
         int p = 0;
-        // Important! Since "tag" and "A" doesn't have a length (it's fixed length of 1 byte)
-        // should not include the length field
         System.arraycopy(new byte[] {1},0,bytes,p,1); p+=1;
         System.arraycopy(new byte[] {3},0,bytes,p,1); p+=1;
         System.arraycopy(new byte[] {3},0,bytes,p,1); p+=1;
@@ -232,9 +231,5 @@ class ByteObj{
             length1[numBytes-1-i] = (byte) ((l >> i*8) & 0xFF);
         }
         System.arraycopy(length1,0,length,(length.length-length1.length),length1.length);
-        for(byte b:length){
-            System.out.print(b);
-        }
-        System.out.println();
     }
 }

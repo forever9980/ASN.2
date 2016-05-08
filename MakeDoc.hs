@@ -1,7 +1,5 @@
 {-
-
     XML Doc generators
-
 -}
 module MakeDoc where
 import Prelude hiding ((<$>))
@@ -30,20 +28,59 @@ makeImports (ASN1 _) =
 makeHeader :: String -> Doc
 makeHeader name = text $ "public class " ++ capitalized name ++ " {"
 
-makeNumNodes :: [Id] -> Int -> Doc
-makeNumNodes [] n = text $ "private int numNodes = " ++ (show n) ++ ";"
-makeNumNodes (x:xs) n = makeNumNodes xs (n+1)
+makePrivateVars :: FormatBody -> Doc
+makePrivateVars (XML []) = empty
+makePrivateVars (ASN1 []) = empty
+makePrivateVars (XML (field:fields))
+  = text "private byte[] "
+makePrivateVars (ASN1 ((Byte _):fields))
+  = makePrivateVars (ASN1 fields)
+makePrivateVars (ASN1 ((Fixed id length):fields))
+  = text ("private ByteObj " ++ id ++ "= new ByteObj (new byte[] {" ++ show length ++ "});") <$>
+    makePrivateVars (ASN1 fields)
+makePrivateVars (ASN1 ((LengthF id length):fields))
+  = text ("private ByteObj " ++ id ++ "= new ByteObj (new byte[] [" ++ show length ++ "]);") <$>
+    makePrivateVars (ASN1 fields)
+makePrivateVars _ = error "Unsupported field" 
 
-{-
+makeConstructor1 :: String -> FormatBody -> Doc
+makeConstructor1 name (ASN1 fields) =
+  -- First Constructor
+  nest level (
+  text ("public " ++ capitalized name ++ "(") <+> makeArgs (stripBytes fields) <+> text (") throws InvalidInputException {") <$>
+    makeIfs (stripBytes fields)
+  ) <$>
+  text "}"
+  where 
+    stripBytes [] = []
+    stripBytes ((Byte _):xs) = stripBytes xs
+    stripBytes (x:xs) = x:(stripBytes xs)
+    makeArgs [] = empty
+    makeArgs ((Fixed id _):[]) = text ("byte[] " ++ id)
+    makeArgs ((LengthF id _):[]) = text ("byte[] " ++ id)
+    makeArgs ((Unbounded id):[]) = text ("byte[] " ++ id)
+    makeArgs ((Fixed id _):fields) = text ("byte[] " ++ id ++ ",")
+    makeArgs ((LengthF id _):fields) = text ("byte[] " ++ id ++ ",")
+    makeArgs ((Unbounded id):fields) = text ("byte[] " ++ ",")
+    makeArgs _ = error "Unsupported type"
+    makeIfs [] = empty
+    makeIfs ((Fixed id _):fields) = text ("if (!(this." ++ id ++ ".setBytes(" ++ id ++ "))) {throw new InvalidInputException(\"" ++ id ++ "\");})") <$> makeIfs fields
+    makeIfs ((LengthF id _):fields) = text ("if (!(this." ++ id ++ ".setBytes(" ++ id ++ "))) {throw new InvalidInputException(\"" ++ id ++ "\");})") <$> makeIfs fields
+    makeIfs ((Unbounded id):fields) = text ("if (!(this." ++ id ++ ".setBytes(" ++ id ++ "))) {throw new InvalidInputException(\"" ++ id ++ "\");})") <$> makeIfs fields
+    makeIfs _ = error "Unsupported type"
 
-makePrivateVars :: [Field] -> Doc
-makePrivateVars [] = empty
-makePrivateVars ((Field_XML id tag (Encoding enc)):xs)
-  = text "private byte[] " <> text id <> text ";" <$> makePrivateVars xs
+makeConstructor2 :: String -> FormatBody -> Doc
+makeConstructor2 name body =
+  nest level (
+    text ("public " ++ capitalized name ++ "(byte[] format) throws InvalidInputException {") <$>
+    
+  )
 
 --f x = 2 * f' x * y x
 --  where f' a = 2 * a
 
+
+{-
 makeConstructor :: [Field] -> String -> Doc
 makeConstructor fields name =
   -- First Constructor

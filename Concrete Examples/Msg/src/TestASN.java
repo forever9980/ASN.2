@@ -37,6 +37,7 @@ class TestASN {
         for(Byte b : bytes){
             System.out.print(b);
         }
+        System.out.println();
 
         /**
          * Try to create an object from an encoded output
@@ -57,7 +58,6 @@ class TestASN {
         System.out.println("session_id = " + new String(client_hello.getSession_id()));
         System.out.println("cipher_suites = " + new String(client_hello.getCipher_suites()));
         System.out.println("comp_methods = " + new String(client_hello.getComp_methods()));
-
         System.out.println();
     }
 }

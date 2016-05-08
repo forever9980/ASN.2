@@ -33,7 +33,7 @@ import Ast
 
 Formats  : Formats_ {reverse $1}
 Formats_ : Format {$1 : []}
-         | Formats_ Format {$2 : $1}
+         | Formats_ Format {$2 : $1} {- {$1 ++ [$2]} -}
 Format   : ident '(' ')' '=' FormatBody {Format $1 [] $5} 
          | ident '(' Ids ')' '=' FormatBody {Format $1 $3 $6}
 

@@ -51,6 +51,7 @@ makeDoc name ids body =
   makeImports body <$>
   nest level
   (makeHeader name <$>
-    makeNumNodes ids 0
+    makePrivateVars body <$>
+    makeConstructor name body
   )<$>
   text "}"
