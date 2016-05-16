@@ -52,6 +52,13 @@ makeDoc name ids body =
   nest level
   (makeHeader name <$>
     makePrivateVars body <$>
-    makeConstructor name body
+    makeConstructor name body <$>
+    makeEncode name body <$>
+    makeStatics name body
   )<$>
-  text "}"
+  text "}" <$>
+  makeRest body
+
+makeRest :: FormatBody -> Doc
+makeRest (XML _) = empty
+makeRest (ASN1 _) = makeASNByteObjClass

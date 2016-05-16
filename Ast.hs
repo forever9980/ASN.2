@@ -12,6 +12,7 @@ module Ast where
 import Data.List
 
 type Id = String
+type Tag = String
 
 data Format = Format Id [Id] FormatBody
       deriving (Show)
@@ -22,7 +23,7 @@ data FormatBody = ASN1 [Field]
 
 data Field = Fixed Id Int
            | LengthF Id Int
-           | Unbounded Id
+           | Unbounded Tag Id
            | Byte Int
            | Enc [Field]
       deriving (Show, Eq)
@@ -32,6 +33,7 @@ data Field = Fixed Id Int
 Functions for checking disjointness of Formats
 
 -}
+
 getFields :: [Format] -> [Field]
 getFields [] = []
 getFields ((Format _ _ (ASN1 fields)):rest) = fields ++ (getFields rest)
@@ -46,8 +48,8 @@ isDisjoint (format:formats) =
 disjoint :: [Field] -> [Field] -> Bool
 disjoint [] [] = False
 disjoint [] ((Byte c):f2) = True
-disjoint ((Unbounded x):[]) ((Unbounded y):f2) = not (f2 == [])
-disjoint [] ((Unbounded x):f2) = disjoint [] f2
+disjoint ((Unbounded x idx):[]) ((Unbounded y idy):f2) = not (f2 == [])
+disjoint [] ((Unbounded x idx):f2) = disjoint [] f2
 disjoint [] ((LengthF _ _):f2) = disjoint [] f2
 disjoint [] ((Fixed _ l):f2) = if (l>0) then True else disjoint [] f2
 disjoint [] ((Enc _):f2) = disjoint [] f2
@@ -72,7 +74,10 @@ disjoint (f1:f1') (f2:f2') =
     (LengthF x l, Enc _)        -> disjoint f1' (f2:f2')
                                 && disjoint ((Fixed x (l-1)):f1') f2'
 
-    (Unbounded x, Unbounded y)  -> x /= y || disjoint f1' f2'
+    (Unbounded x idx, Unbounded y idy)  -> x /= y || disjoint f1' f2'
+
+    (Unbounded x idx, Byte b)   -> True
+    (Byte b, Unbounded x idx)   -> True
 
     otherwise                   -> disjoint f1' (f2:f2') && disjoint (f1:f1') f2'
 disjoint f1 f2 = disjoint f2 f1

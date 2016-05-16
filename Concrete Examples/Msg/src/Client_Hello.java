@@ -27,10 +27,6 @@ class Client_Hello {
         if (!(this.comp_methods.setBytes(comp_methods))) {throw new InvalidInputException("comp_methods");}
     }
 
-    /**
-     * Unsafe parser! No checks are implemented yet.
-     */
-
     Client_Hello(byte[] format) throws InvalidInputException {
         int pointer = 0;
         if(format[pointer] == 1) {pointer+=1;} else failParse(1);
@@ -90,7 +86,7 @@ class Client_Hello {
      ******************************/
     public byte[] encode (){
         int length =
-                (1)
+                + (1)
                 + (1)
                 + (1)
                 + getIntFromBytes(time.getLengthField())
@@ -105,7 +101,6 @@ class Client_Hello {
         System.arraycopy(new byte[] {3},0,bytes,p,1); p+=1;
         System.arraycopy(new byte[] {3},0,bytes,p,1); p+=1;
 
-
         System.arraycopy(time.getBytes(),0,bytes,p,time.getBytes().length); p+= time.getBytes().length;
         System.arraycopy(random.getBytes(),0,bytes,p,random.getBytes().length); p+= random.getBytes().length;
 
@@ -119,7 +114,7 @@ class Client_Hello {
         System.arraycopy(comp_methods.getBytes(),0,bytes,p,comp_methods.getBytes().length); p += comp_methods.getBytes().length;
 
         return bytes;
-           }
+    }
 
 
     /*******************************

@@ -52,7 +52,7 @@ Fields_ASN  : Fields_ASN_ {reverse $1}
 Fields_ASN_ : Field_ASN {$1 : []}
             | Fields_ASN_ ',' Field_ASN {$3 : $1}
 
-Field_XML   : ident '(' ident ')' {Unbounded $1}
+Field_XML   : ident '(' ident ')' {Unbounded $1 $3}
 Fields_XML  : Fields_XML_ {reverse $1}
 Fields_XML_ : Field_XML {$1 : []}
             | Fields_XML_ ',' Field_XML {$3 : $1}

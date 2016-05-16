@@ -347,12 +347,12 @@ happyReduction_17 _ _ _  = notHappyAtAll
 
 happyReduce_18 = happyReduce 4 14 happyReduction_18
 happyReduction_18 (_ `HappyStk`
-	_ `HappyStk`
+	(HappyTerminal (TATOM _ happy_var_3)) `HappyStk`
 	_ `HappyStk`
 	(HappyTerminal (TATOM _ happy_var_1)) `HappyStk`
 	happyRest)
 	 = HappyAbsSyn14
-		 (Unbounded happy_var_1
+		 (Unbounded happy_var_1 happy_var_3
 	) `HappyStk` happyRest
 
 happyReduce_19 = happySpecReduce_1  15 happyReduction_19
