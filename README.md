@@ -36,7 +36,7 @@ See also the list of [contributors](https://github.com/your/project/contributors
 
 ## License
 
-Licencing has not yet been decided for this project, but must always remain open source.
+This project is licensed under the MIT License
 
 ## Acknowledgments
 
