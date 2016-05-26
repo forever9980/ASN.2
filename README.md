@@ -10,6 +10,12 @@ Currently the project only reads this file. Can be changed in program.hs
 
 Haskell platform
 
+Text.PrettyPrint.Leijen
+```
+cabal update
+cabal install wl-pprint
+```
+
 ### Usage
 
 Look at the example protocol format in
