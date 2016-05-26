@@ -1,6 +1,43 @@
 # ASN.2
 ASN.2 : A model-driven approach to secure protocol implementation
 
-(C) Buster Kim Mejborn - 2016
+## Getting Started
 
-All rights reserved
+See "Concrete Examples/TLS.asn2" for a quick format implementation.
+Currently the project only reads this file. Can be changed in program.hs
+
+### Prerequisities
+
+Haskell platform
+
+### Usage
+
+Look at the example protocol format in
+
+```
+Concrete Examples/TLS.asn2
+```
+
+Run the api generator with
+
+```
+runhaskell program.hs
+```
+
+## Contributing
+
+All contributions are welcome, but subject to review
+
+## Authors
+
+* **Buster Kim Mejborn** - *Initial work* - [mejborn](https://github.com/mejborn)
+
+See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+
+## License
+
+Licencing has not yet been decided for this project, but must always remain open source.
+
+## Acknowledgments
+
+Sebastian Mödersheim - www2.compute.dtu.dk/~samo
